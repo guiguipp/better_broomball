@@ -1,4 +1,6 @@
 const inquirer = require("inquirer");
+require("dotenv").config();
+const keys = {login: process.env.ADMIN_LOGIN,password: process.env.ADMIN_PASSWORD}
 
 userType()
 
@@ -41,12 +43,12 @@ function login(){
         }
     ]).then(function(res) {
         // If the inquirerResponse confirms, we displays the inquirerResponse's username and pokemon from the answers.
-        if (res.username === "gui" && res.password === "paugam") {
-            console.log("\nWelcome " + res.username);
+        if (res.username === keys.login && res.password === keys.password) {
+            console.log("\nWelcome ",res.username,"\n");
             let manager = require("./bb_manager.js");
             }
         else {
-            console.log("\nInvalid credentials. Please try again later.");
+            console.log("\nInvalid credentials. Please try again later.\n");
             }
         });
     }
