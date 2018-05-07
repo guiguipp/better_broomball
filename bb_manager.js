@@ -4,7 +4,6 @@ const cTable = require('console.table');
 
 // array of products
 var items = [];
-var noDes = [];
 
 // mysql connection variable
 const connection = mysql.createConnection({
@@ -55,32 +54,14 @@ inquirer.prompt([
             .then(function(r) {
                 // view option#1
                 if (r.check === "View Products for Sale") {
-                    // console.log("Show Products here");
-                    connection.query("SELECT item_id,category,product_name,price,stock_quantity from products", function(err, res) {
-                        if (err) throw err;
-                        res.forEach(function(e) {
-                            noDes.push(e);
-                            return noDes;
-                            });
-                        console.table("\n",noDes);
-                        connection.end();
-                    })
+                    viewProducts();
                 }
                 // view option#2  list all items with an inventory count lower than five
                 else if (r.check === "View Low Inventory") {
-                    connection.query("SELECT item_id,category,product_name,price,stock_quantity from products WHERE stock_quantity < 5", function(err, res) {
-                        if (err) throw err;
-                        let lowInvArray = [];
-                        res.forEach(function(e) {
-                            lowInvArray.push(e);
-                            return lowInvArray;
-                            });
-                        console.table("\n",lowInvArray);
-                        connection.end();
-                    }
-                )
+                    viewLowInventory();
+                    }    
+                })
             }
-        })}
         // update
         else if (r.action === "UPDATE") {            
                 inquirer.prompt([
@@ -93,130 +74,10 @@ inquirer.prompt([
                 ])
                 .then(function(c) {
                     if (c.update === "Add new product") {
-                        inquirer.prompt([
-                        {
-                            type: "input",
-                            message: "Name of new product",
-                            name: "name"
-                        },
-                        {
-                            type: "input",
-                            message: "Category of new product",
-                            name: "category"
-                        },
-                        {
-                            type: "input",
-                            message: "Description of new product",
-                            name: "description"
-                        },
-                        {
-                            type: "input",
-                            message: "Provider of new product",
-                            name: "provider"
-                        },
-                        {
-                            type: "input",
-                            message: "Price of new product",
-                            name: "price"
-                        },
-                        {
-                            type: "input",
-                            message: "Stock quantity of new product",
-                            name: "quantity"
-                        },
-                        {
-                            type: "confirm",
-                            message: "Are you sure you want to save this new product?",
-                            name: "confirm",
-                            default: false
-                        }
-                        ])
-                        .then(function(r) {
-                                // If the inquirerResponse confirms, we create the new object, and enter it in the database
-                                if (r.confirm) {
-                                    // creating new JS object using constructor
-                                    var newProduct = new Item(
-                                      r.category,
-                                      r.name,
-                                      r.description,
-                                      r.provider,
-                                      r.price,
-                                      r.quantity
-                                  )                                                                    
-                                //   enter product in db using the function
-                                newItemInDB(newProduct)
-                                }
-                                else {
-                                  console.log("\nData has not been saved.");
-                                  connection.end();
-                                }
-                              }); 
+                        addProduct();
                         }
                     else if (c.update === "Add to inventory") {
-                        // your app should display a prompt that will let the manager "add more" of any item currently in the store.
-                        connection.query("SELECT * from products", function(err, res) {                            
-                            res.forEach(function(e) {
-                                items.push(e);
-                                return items;
-                                });
-                                // creating arrays in the local scope to store data from database usable in JS function 
-                                let itemsId = [];
-                                let itemsCategory = [];
-                                let itemsName = [];
-                                let itemsDescription = [];
-                                let itemsProvider = [];
-                                let itemsPrice = [];
-                                let itemsQuantity = [];
-                                
-                                // pushing names and prices to arrays to manipulate
-                                for (let i = 0; i < items.length; i++) {
-                                    itemsId.push(items[i].item_id);
-                                    itemsCategory.push(items[i].category);
-                                    itemsName.push(items[i].product_name);
-                                    itemsDescription.push(items[i].description);
-                                    itemsProvider.push(items[i].provider);
-                                    itemsPrice.push(items[i].price);
-                                    itemsQuantity.push(items[i].stock_quantity);
-                                } // pushing all values to separate arrays (with same index)     
-                                inquirer.prompt([
-                                    {
-                                        type: "list",
-                                        message: "Which product do you want to re-stock?",
-                                        choices: itemsName,
-                                        name: "restock"
-                                    }
-                                ]).then(function(inv){
-                                    // getting the index of the product chosen in the list (same in all arrays)
-                                    let productIndex = itemsName.indexOf(inv.restock)
-                                    let currentStock = itemsQuantity[productIndex];
-                                    let currentProd = itemsName[productIndex];
-                                    console.log(`There is currently ${currentStock} ${currentProd} in stock`)
-                                    inquirer.prompt([
-                                        {
-                                            type: "input",
-                                            message: "What should be the new inventory for this product?",
-                                            name: "quantity"
-                                        }
-                                    ]).then(function(q){
-                                        connection.query (`UPDATE products SET ? WHERE ?`,
-                                        [
-                                          {
-                                            stock_quantity: q.quantity
-                                          },
-                                          {
-                                            product_name: currentProd
-                                          }
-                                        ],
-                                        function(err, res) {
-                                            console.log(res.affectedRows + " products updated!\n");
-                                            // console.log(`There is currently ${currentStock} ${inv.restock} in stock`)
-                                            // Call deleteProduct AFTER the UPDATE completes
-                                            connection.end()
-                                            }
-                                        )
-                                    });
-                                });
-                            })
+                        updateInv();
                         }
                     });
                 };
@@ -241,3 +102,156 @@ function newItemInDB(thing) {
         connection.end();
     }
     )};
+
+function viewProducts(){
+    connection.query("SELECT item_id,category,product_name,price,stock_quantity from products", function(err, res) {
+        if (err) throw err;
+        var noDes = [];
+        res.forEach(function(e) {
+            noDes.push(e);
+            return noDes;
+            });
+        console.table("\n",noDes);
+        connection.end();
+        })
+    }
+
+function viewLowInventory(){
+    connection.query("SELECT item_id,category,product_name,price,stock_quantity from products WHERE stock_quantity < 5", function(err, res) {
+        if (err) throw err;
+        let lowInvArray = [];
+        res.forEach(function(e) {
+            lowInvArray.push(e);
+            return lowInvArray;
+            });
+        console.table("\n",lowInvArray);
+        connection.end();
+        });
+    }
+
+function updateInv(){
+    connection.query("SELECT * from products", function(err, res) {                            
+        res.forEach(function(e) {
+            items.push(e);
+            return items;
+            });
+            // creating arrays in the local scope to store data from database usable in JS function 
+            let itemsId = [];
+            let itemsCategory = [];
+            let itemsName = [];
+            let itemsDescription = [];
+            let itemsProvider = [];
+            let itemsPrice = [];
+            let itemsQuantity = [];
+            
+            // pushing names and prices to arrays to manipulate
+            for (let i = 0; i < items.length; i++) {
+                itemsId.push(items[i].item_id);
+                itemsCategory.push(items[i].category);
+                itemsName.push(items[i].product_name);
+                itemsDescription.push(items[i].description);
+                itemsProvider.push(items[i].provider);
+                itemsPrice.push(items[i].price);
+                itemsQuantity.push(items[i].stock_quantity);
+            } // pushing all values to separate arrays (with same index)     
+            inquirer.prompt([
+                {
+                    type: "list",
+                    message: "Which product do you want to re-stock?",
+                    choices: itemsName,
+                    name: "restock"
+                }
+            ]).then(function(inv){
+                // getting the index of the product chosen in the list (same in all arrays)
+                let productIndex = itemsName.indexOf(inv.restock)
+                let currentStock = itemsQuantity[productIndex];
+                let currentProd = itemsName[productIndex];
+                console.log(`\n************\nThere is currently ${currentStock} ${currentProd} in stock\n************\n`)
+                inquirer.prompt([
+                    {
+                        type: "input",
+                        message: "What should be the new inventory count for this product?",
+                        name: "quantity"
+                    }
+                ]).then(function(q){
+                    connection.query (`UPDATE products SET ? WHERE ?`,
+                    [
+                      {
+                        stock_quantity: q.quantity
+                      },
+                      {
+                        product_name: currentProd
+                      }
+                    ],
+                    function(err, res) {
+                        console.log(res.affectedRows + " products updated!\n");
+                        // console.log(`There is currently ${currentStock} ${inv.restock} in stock`)
+                        // Call deleteProduct AFTER the UPDATE completes
+                        connection.end()
+                        }
+                    )
+                });
+            });
+        })
+    }
+
+function addProduct(){
+    inquirer.prompt([
+    {
+        type: "input",
+        message: "Name of new product",
+        name: "name"
+    },
+    {
+        type: "input",
+        message: "Category of new product",
+        name: "category"
+    },
+    {
+        type: "input",
+        message: "Description of new product",
+        name: "description"
+    },
+    {
+        type: "input",
+        message: "Provider of new product",
+        name: "provider"
+    },
+    {
+        type: "input",
+        message: "Price of new product",
+        name: "price"
+    },
+    {
+        type: "input",
+        message: "Stock quantity of new product",
+        name: "quantity"
+    },
+    {
+        type: "confirm",
+        message: "Are you sure you want to save this new product?",
+        name: "confirm",
+        default: false
+    }
+    ])
+    .then(function(r) {
+        // If the inquirerResponse confirms, we create the new object, and enter it in the database
+        if (r.confirm) {
+            // creating new JS object using constructor
+            var newProduct = new Item(
+                r.category,
+                r.name,
+                r.description,
+                r.provider,
+                r.price,
+                r.quantity
+            )                                                                    
+        //   enter product in db using the function
+        newItemInDB(newProduct)
+        }
+        else {
+            console.log("\nData has not been saved.");
+            connection.end();
+            }
+        }); 
+    }
