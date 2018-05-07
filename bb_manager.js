@@ -32,56 +32,59 @@ function Item(category,name,description,provider,price,quantity) {
         };
 
 // inquirer prompt to start interacting with the database
-inquirer.prompt([
-    {
-        type: "list",
-        message: "Do you want to CHECK the inventory, or UPDATE the inventory?",
-        choices: ["VIEW", "UPDATE"],
-        name: "action"
-    },
-    ])
-    .then(function(r) {
-        // console.log("Choice is ", r.action)
-        if (r.action === "VIEW") {
-            inquirer.prompt([
-                {
-                type: "list",
-                message: "Admin tools:",
-                choices: ["View Products for Sale", "View Low Inventory"],
-                name: "check"
-                },
-            ])
-            .then(function(r) {
-                // view option#1
-                if (r.check === "View Products for Sale") {
-                    viewProducts();
-                }
-                // view option#2  list all items with an inventory count lower than five
-                else if (r.check === "View Low Inventory") {
-                    viewLowInventory();
-                    }    
-                })
-            }
-        // update
-        else if (r.action === "UPDATE") {            
+
+function getStarted(){
+    inquirer.prompt([
+        {
+            type: "list",
+            message: "Do you want to CHECK the inventory, or UPDATE the inventory?",
+            choices: ["VIEW", "UPDATE"],
+            name: "action"
+        },
+        ])
+        .then(function(r) {
+            // console.log("Choice is ", r.action)
+            if (r.action === "VIEW") {
                 inquirer.prompt([
                     {
                     type: "list",
                     message: "Admin tools:",
-                    choices: ["Add to inventory","Add new product"],
-                    name: "update"
+                    choices: ["View Products for Sale", "View Low Inventory"],
+                    name: "check"
                     },
                 ])
-                .then(function(c) {
-                    if (c.update === "Add new product") {
-                        addProduct();
-                        }
-                    else if (c.update === "Add to inventory") {
-                        updateInv();
-                        }
-                    });
-                };
-            });
+                .then(function(r) {
+                    // view option#1
+                    if (r.check === "View Products for Sale") {
+                        viewProducts();
+                    }
+                    // view option#2  list all items with an inventory count lower than five
+                    else if (r.check === "View Low Inventory") {
+                        viewLowInventory();
+                        }    
+                    })
+                }
+            // update
+            else if (r.action === "UPDATE") {            
+                    inquirer.prompt([
+                        {
+                        type: "list",
+                        message: "Admin tools:",
+                        choices: ["Add to inventory","Add new product"],
+                        name: "update"
+                        },
+                    ])
+                    .then(function(c) {
+                        if (c.update === "Add new product") {
+                            addProduct();
+                            }
+                        else if (c.update === "Add to inventory") {
+                            updateInv();
+                            }
+                        });
+                    };
+                });
+        }
 
                     
                     
@@ -255,3 +258,5 @@ function addProduct(){
             }
         }); 
     }
+
+module.exports = getStarted()
