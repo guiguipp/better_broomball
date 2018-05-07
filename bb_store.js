@@ -1,6 +1,8 @@
-const inquirer = require("inquirer");
 require("dotenv").config();
+const inquirer = require("inquirer");
 const keys = {login: process.env.ADMIN_LOGIN,password: process.env.ADMIN_PASSWORD}
+let customer = require('./bb_custom.js')
+let browseType;
 
 userType()
 
@@ -17,16 +19,16 @@ function userType(){
       .then(function(res) {
         // If the inquirerResponse confirms, we displays the inquirerResponse's username and pokemon from the answers.
         if (res.type === "Browse the store") {
-          console.log("Go to the Store");
+            browseType = "User";
+            let customerLogin = customer.getStarted();
           
         }
         else if (res.type === "Admin access") {
+            browseType = "Admin";
             login();
         }
-      });
-    
-    
-}
+      });    
+    }
 
 // Checks admin credentials. If valid, enables admin options
 function login(){

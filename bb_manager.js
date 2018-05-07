@@ -1,6 +1,7 @@
 const mysql = require("mysql");
 const inquirer = require("inquirer");
 const cTable = require('console.table');
+// let customer = require('./bb_custom.js')
 
 // array of products
 var items = [];
@@ -56,11 +57,14 @@ function getStarted(){
                 .then(function(r) {
                     // view option#1
                     if (r.check === "View Products for Sale") {
+                        // let showProd = customer.viewProducts();
                         viewProducts();
+                        connection.end();
                     }
                     // view option#2  list all items with an inventory count lower than five
                     else if (r.check === "View Low Inventory") {
                         viewLowInventory();
+                        connection.end();
                         }    
                     })
                 }
@@ -85,9 +89,19 @@ function getStarted(){
                     };
                 });
         }
+                    
+function viewProducts(){
+    connection.query("SELECT item_id,category,product_name,price,stock_quantity from products", function(err, res) {
+        if (err) throw err;
+        var noDes = [];
+        res.forEach(function(e) {
+            noDes.push(e);
+            return noDes;
+            });
+        console.table("\n",noDes);
+        })
+    }
 
-                    
-                    
 // function to create each js object into a db entry
 function newItemInDB(thing) {
     var query = connection.query(
@@ -106,18 +120,6 @@ function newItemInDB(thing) {
     }
     )};
 
-function viewProducts(){
-    connection.query("SELECT item_id,category,product_name,price,stock_quantity from products", function(err, res) {
-        if (err) throw err;
-        var noDes = [];
-        res.forEach(function(e) {
-            noDes.push(e);
-            return noDes;
-            });
-        console.table("\n",noDes);
-        connection.end();
-        })
-    }
 
 function viewLowInventory(){
     connection.query("SELECT item_id,category,product_name,price,stock_quantity from products WHERE stock_quantity < 5", function(err, res) {
@@ -128,9 +130,9 @@ function viewLowInventory(){
             return lowInvArray;
             });
         console.table("\n",lowInvArray);
-        connection.end();
-        });
+    });
     }
+
 
 function updateInv(){
     connection.query("SELECT * from products", function(err, res) {                            
@@ -258,5 +260,7 @@ function addProduct(){
             }
         }); 
     }
+
+
 
 module.exports = getStarted()
