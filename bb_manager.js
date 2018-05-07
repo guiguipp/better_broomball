@@ -21,33 +21,14 @@ connection.connect(function(err) {
     });
 
 // function to create each new item as a js object
-function Item(category,product_name,description,provider,price,stock_quantity) {
+function Item(category,name,description,provider,price,quantity) {
         this.category = category,
-        this.product_name = product_name,
+        this.name = name,
         this.description = description,
         this.provider = provider,
         this.price = price,
-        this.stock_quantity = stock_quantity
+        this.quantity = quantity
         };
-    
-// function to create each js object into a db entry
-function newItemInDB(thing) {
-    var query = connection.query(
-    "INSERT INTO auctions SET ?",
-    {
-        item_id: thing.id,
-        category: thing.category,
-        product_name: thing.product_name,
-        description: thing.description, 
-        provider: thing.provider,
-        price: thing.price,
-        stock_quantity: thing.stock_quantity
-    },
-    function(err, res) {
-        console.log(res.affectedRows + " object created!\n");
-        connection.end();
-    }
-    )};
 
 // inquirer prompt to start interacting with the database
 inquirer.prompt([
@@ -156,9 +137,9 @@ inquirer.prompt([
                                       r.provider,
                                       r.price,
                                       r.quantity
-                                  )
+                                  )                                                                    
                                 //   enter product in db using the function
-                                  newItemInDB(newProduct)
+                                newItemInDB(newProduct)
                                 }
                                 else {
                                   console.log("\nData has not been saved.");
@@ -167,12 +148,12 @@ inquirer.prompt([
                               }); 
                         }})})}});
                     
-
+// function to create each js object into a db entry
 function newItemInDB(thing) {
     var query = connection.query(
     "INSERT INTO products SET ?",
     {
-        category : thing.category,
+        category: thing.category,
         product_name: thing.name,
         description: thing.description,
         provider: thing.provider,
