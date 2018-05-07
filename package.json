@@ -4,6 +4,7 @@
   "description": "CLI type application combining javascript and MySQL to create an Amazon-like storefront.",
   "main": "bb_custom.js",
   "dependencies": {
+    "console.table": "^0.10.0",
     "inquirer": "^5.2.0",
     "mysql": "^2.15.0"
   },

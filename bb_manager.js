@@ -1,8 +1,10 @@
-var mysql = require("mysql");
-var inquirer = require("inquirer");
+const mysql = require("mysql");
+const inquirer = require("inquirer");
+const cTable = require('console.table');
 
 // array of products
 var items = [];
+var noDes = [];
 
 // mysql connection variable
 const connection = mysql.createConnection({
@@ -35,59 +37,62 @@ inquirer.prompt([
     {
         type: "list",
         message: "Do you want to CHECK the inventory, or UPDATE the inventory?",
-        choices: ["CHECK", "UPDATE"],
+        choices: ["VIEW", "UPDATE"],
         name: "action"
     },
     ])
     .then(function(r) {
         // console.log("Choice is ", r.action)
-        if (r.action === "CHECK") {
-            // Call function to check the products
-            connection.query("SELECT * FROM products", function(err, res) {
-                if (err) throw err;
-                console.log(res); // response from database
-                connection.end();
-                });
+        if (r.action === "VIEW") {
+            inquirer.prompt([
+                {
+                type: "list",
+                message: "Admin tools:",
+                choices: ["View Products for Sale", "View Low Inventory"],
+                name: "check"
+                },
+            ])
+            .then(function(r) {
+                // view option#1
+                if (r.check === "View Products for Sale") {
+                    // console.log("Show Products here");
+                    connection.query("SELECT item_id,category,product_name,price,stock_quantity from products", function(err, res) {
+                        if (err) throw err;
+                        res.forEach(function(e) {
+                            noDes.push(e);
+                            return noDes;
+                            });
+                        console.table("\n",noDes);
+                        connection.end();
+                    })
+                }
+                // view option#2  list all items with an inventory count lower than five
+                else if (r.check === "View Low Inventory") {
+                    connection.query("SELECT item_id,category,product_name,price,stock_quantity from products WHERE stock_quantity < 5", function(err, res) {
+                        if (err) throw err;
+                        let lowInvArray = [];
+                        res.forEach(function(e) {
+                            lowInvArray.push(e);
+                            return lowInvArray;
+                            });
+                        console.table("\n",lowInvArray);
+                        connection.end();
+                    }
+                )
             }
+        })}
+        // update
         else if (r.action === "UPDATE") {            
-            // console.log("Selecting all products...\n");
-            connection.query("SELECT * FROM products", function(err, res) {
-                if (err) throw err;
-                // getting items from the database, pushing them to the "items" array
-                res.forEach(function(e) {
-                    items.push(e);
-                    return items;
-                    });
-                    
-                // creating arrays in the local scope to store data from database usable in JS function 
-                let itemsId = [];
-                let itemsCategory = [];
-                let itemsName = [];
-                let itemsDescription = [];
-                let itemsProvider = [];
-                let itemsPrice = [];
-                let itemsQuantity = [];
-    
-                // pushing names and prices to arrays to manipulate
-                for (let i = 0; i < items.length; i++) {
-                    itemsId.push(items[i].item_id);
-                    itemsCategory.push(items[i].category);
-                    itemsName.push(items[i].product_name);
-                    itemsDescription.push(items[i].description);
-                    itemsProvider.push(items[i].provider);
-                    itemsPrice.push(items[i].price);
-                    itemsQuantity.push(items[i].stock_quantity);
-                } // pushing all values to separate arrays (with same index)               
                 inquirer.prompt([
                     {
                     type: "list",
                     message: "Admin tools:",
-                    choices: ["See products", "View Low Inventory","Add to inventory","Add new product"],
-                    name: "admin"
+                    choices: ["Add to inventory","Add new product"],
+                    name: "update"
                     },
                 ])
                 .then(function(c) {
-                    if (c.admin === "Add new product") {
+                    if (c.update === "Add new product") {
                         inquirer.prompt([
                         {
                             type: "input",
@@ -146,7 +151,16 @@ inquirer.prompt([
                                   connection.end();
                                 }
                               }); 
-                        }})})}});
+                        }
+                    else if (c.update === "Add to inventory") {
+                        console.log("Something fun");
+                        connection.end();
+                    }
+                    });
+                };
+            });
+
+                    
                     
 // function to create each js object into a db entry
 function newItemInDB(thing) {
@@ -161,7 +175,7 @@ function newItemInDB(thing) {
         stock_quantity: thing.quantity
     },
     function(err, res) {
-        console.log(res.affectedRows + " object created!\n");
+        console.log(res.affectedRows + " product created!\n");
         connection.end();
     }
     )};
