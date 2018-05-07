@@ -153,9 +153,71 @@ inquirer.prompt([
                               }); 
                         }
                     else if (c.update === "Add to inventory") {
-                        console.log("Something fun");
-                        connection.end();
-                    }
+                        // your app should display a prompt that will let the manager "add more" of any item currently in the store.
+                        connection.query("SELECT * from products", function(err, res) {                            
+                            res.forEach(function(e) {
+                                items.push(e);
+                                return items;
+                                });
+                                // creating arrays in the local scope to store data from database usable in JS function 
+                                let itemsId = [];
+                                let itemsCategory = [];
+                                let itemsName = [];
+                                let itemsDescription = [];
+                                let itemsProvider = [];
+                                let itemsPrice = [];
+                                let itemsQuantity = [];
+                                
+                                // pushing names and prices to arrays to manipulate
+                                for (let i = 0; i < items.length; i++) {
+                                    itemsId.push(items[i].item_id);
+                                    itemsCategory.push(items[i].category);
+                                    itemsName.push(items[i].product_name);
+                                    itemsDescription.push(items[i].description);
+                                    itemsProvider.push(items[i].provider);
+                                    itemsPrice.push(items[i].price);
+                                    itemsQuantity.push(items[i].stock_quantity);
+                                } // pushing all values to separate arrays (with same index)     
+                                inquirer.prompt([
+                                    {
+                                        type: "list",
+                                        message: "Which product do you want to re-stock?",
+                                        choices: itemsName,
+                                        name: "restock"
+                                    }
+                                ]).then(function(inv){
+                                    // getting the index of the product chosen in the list (same in all arrays)
+                                    let productIndex = itemsName.indexOf(inv.restock)
+                                    let currentStock = itemsQuantity[productIndex];
+                                    let currentProd = itemsName[productIndex];
+                                    console.log(`There is currently ${currentStock} ${currentProd} in stock`)
+                                    inquirer.prompt([
+                                        {
+                                            type: "input",
+                                            message: "What should be the new inventory for this product?",
+                                            name: "quantity"
+                                        }
+                                    ]).then(function(q){
+                                        connection.query (`UPDATE products SET ? WHERE ?`,
+                                        [
+                                          {
+                                            stock_quantity: q.quantity
+                                          },
+                                          {
+                                            product_name: currentProd
+                                          }
+                                        ],
+                                        function(err, res) {
+                                            console.log(res.affectedRows + " products updated!\n");
+                                            // console.log(`There is currently ${currentStock} ${inv.restock} in stock`)
+                                            // Call deleteProduct AFTER the UPDATE completes
+                                            connection.end()
+                                            }
+                                        )
+                                    });
+                                });
+                            })
+                        }
                     });
                 };
             });
